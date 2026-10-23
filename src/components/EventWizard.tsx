@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Sparkles,
   MapPin,
@@ -41,6 +41,18 @@ export default function EventWizard({ isOpen, onClose, onGenerate, isLoading, lo
     dietaryNotes: '',
   });
 
+  // Keyboard accessibility: Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   const toggleVibe = (tag: string) => {
     setForm(f => ({
       ...f,
@@ -78,7 +90,7 @@ export default function EventWizard({ isOpen, onClose, onGenerate, isLoading, lo
               <Sparkles size={22} color="var(--gold)" aria-hidden="true" />
               Architect Event Blueprint
             </h2>
-            <p style={{ fontSize: 13, color: 'var(--text-tertiary)', marginTop: 4 }}>
+            <p id="wizard-modal-desc" style={{ fontSize: 13, color: 'var(--text-tertiary)', marginTop: 4 }}>
               Configure your event parameters for AI-powered planning
             </p>
           </div>
@@ -121,13 +133,13 @@ export default function EventWizard({ isOpen, onClose, onGenerate, isLoading, lo
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit}>
-            {/* Event Type */}
-            <div style={{ marginBottom: 20 }}>
-              <label id="event-type-group-label" className="label">Event Type</label>
+          <form onSubmit={handleSubmit} aria-describedby="wizard-modal-desc">
+            {/* Event Type Group */}
+            <fieldset style={{ border: 'none', padding: 0, margin: '0 0 20px 0' }}>
+              <legend className="label" id="event-type-legend">Event Category Selection</legend>
               <div
                 role="group"
-                aria-labelledby="event-type-group-label"
+                aria-labelledby="event-type-legend"
                 style={{ display: 'flex', gap: 8 }}
               >
                 {(['Wedding', 'Birthday', 'Community Event'] as EventCategory[]).map((type) => (
@@ -154,80 +166,99 @@ export default function EventWizard({ isOpen, onClose, onGenerate, isLoading, lo
                   </button>
                 ))}
               </div>
-            </div>
+            </fieldset>
 
             {/* Title + City */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-              <div>
-                <label htmlFor="wizard-event-title" className="label">Event Title</label>
-                <input
-                  id="wizard-event-title"
-                  className="input-field"
-                  placeholder="e.g., Royal Heritage Reception"
-                  value={form.title}
-                  onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))}
-                  required
-                />
+            <fieldset style={{ border: 'none', padding: 0, margin: '0 0 16px 0' }}>
+              <legend className="sr-only">Event Basics</legend>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label htmlFor="wizard-event-title" className="label">
+                    Event Title <span aria-hidden="true" style={{ color: 'var(--crisis-coral)' }}>*</span>
+                  </label>
+                  <input
+                    id="wizard-event-title"
+                    className="input-field"
+                    placeholder="e.g., Royal Heritage Reception"
+                    value={form.title}
+                    onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))}
+                    required
+                    aria-required="true"
+                    aria-describedby="title-helper"
+                  />
+                  <span id="title-helper" className="sr-only">Descriptive title of the planned event</span>
+                </div>
+                <div>
+                  <label htmlFor="wizard-event-city" className="label">
+                    <MapPin size={11} aria-hidden="true" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} />
+                    City / Location <span aria-hidden="true" style={{ color: 'var(--crisis-coral)' }}>*</span>
+                  </label>
+                  <input
+                    id="wizard-event-city"
+                    className="input-field"
+                    placeholder="e.g., Mumbai, Srinagar"
+                    value={form.city}
+                    onChange={(e) => setForm(f => ({ ...f, city: e.target.value }))}
+                    required
+                    aria-required="true"
+                    aria-describedby="city-helper"
+                  />
+                  <span id="city-helper" className="sr-only">Destination city or venue location for realistic local market pricing</span>
+                </div>
               </div>
-              <div>
-                <label htmlFor="wizard-event-city" className="label">
-                  <MapPin size={11} aria-hidden="true" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} />
-                  City / Location
-                </label>
-                <input
-                  id="wizard-event-city"
-                  className="input-field"
-                  placeholder="e.g., Mumbai, Srinagar"
-                  value={form.city}
-                  onChange={(e) => setForm(f => ({ ...f, city: e.target.value }))}
-                  required
-                />
-              </div>
-            </div>
+            </fieldset>
 
             {/* Guest Count + Budget + Currency */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px', gap: 12, marginBottom: 16 }}>
-              <div>
-                <label htmlFor="wizard-guest-count" className="label">
-                  <Users size={11} aria-hidden="true" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} />
-                  Guest Count (PAX)
-                </label>
-                <input
-                  id="wizard-guest-count"
-                  type="number"
-                  min={1}
-                  className="input-field font-mono"
-                  value={form.guestCount}
-                  onChange={(e) => setForm(f => ({ ...f, guestCount: parseInt(e.target.value) || 0 }))}
-                />
+            <fieldset style={{ border: 'none', padding: 0, margin: '0 0 16px 0' }}>
+              <legend className="sr-only">Financial and Headcount Parameters</legend>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px', gap: 12 }}>
+                <div>
+                  <label htmlFor="wizard-guest-count" className="label">
+                    <Users size={11} aria-hidden="true" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} />
+                    Guest Count (PAX)
+                  </label>
+                  <input
+                    id="wizard-guest-count"
+                    type="number"
+                    min={1}
+                    className="input-field font-mono"
+                    value={form.guestCount}
+                    onChange={(e) => setForm(f => ({ ...f, guestCount: parseInt(e.target.value) || 0 }))}
+                    aria-describedby="guest-count-helper"
+                  />
+                  <span id="guest-count-helper" className="sr-only">Total number of expected guests</span>
+                </div>
+                <div>
+                  <label htmlFor="wizard-total-budget" className="label">
+                    <Wallet size={11} aria-hidden="true" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} />
+                    Total Budget
+                  </label>
+                  <input
+                    id="wizard-total-budget"
+                    type="number"
+                    min={1000}
+                    className="input-field font-mono"
+                    value={form.totalBudget}
+                    onChange={(e) => setForm(f => ({ ...f, totalBudget: parseInt(e.target.value) || 0 }))}
+                    aria-describedby="budget-helper"
+                  />
+                  <span id="budget-helper" className="sr-only">Total operational event budget allocated</span>
+                </div>
+                <div>
+                  <label htmlFor="wizard-currency-select" className="label">Currency</label>
+                  <select
+                    id="wizard-currency-select"
+                    className="input-field"
+                    value={form.currency}
+                    onChange={(e) => setForm(f => ({ ...f, currency: e.target.value }))}
+                    aria-label="Currency selection"
+                  >
+                    <option value="INR">₹ INR</option>
+                    <option value="USD">$ USD</option>
+                  </select>
+                </div>
               </div>
-              <div>
-                <label htmlFor="wizard-total-budget" className="label">
-                  <Wallet size={11} aria-hidden="true" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} />
-                  Total Budget
-                </label>
-                <input
-                  id="wizard-total-budget"
-                  type="number"
-                  min={1000}
-                  className="input-field font-mono"
-                  value={form.totalBudget}
-                  onChange={(e) => setForm(f => ({ ...f, totalBudget: parseInt(e.target.value) || 0 }))}
-                />
-              </div>
-              <div>
-                <label htmlFor="wizard-currency-select" className="label">Currency</label>
-                <select
-                  id="wizard-currency-select"
-                  className="input-field"
-                  value={form.currency}
-                  onChange={(e) => setForm(f => ({ ...f, currency: e.target.value }))}
-                >
-                  <option value="INR">₹ INR</option>
-                  <option value="USD">$ USD</option>
-                </select>
-              </div>
-            </div>
+            </fieldset>
 
             {/* Event Date */}
             <div style={{ marginBottom: 16 }}>
@@ -241,18 +272,19 @@ export default function EventWizard({ isOpen, onClose, onGenerate, isLoading, lo
                 className="input-field"
                 value={form.eventDate}
                 onChange={(e) => setForm(f => ({ ...f, eventDate: e.target.value }))}
+                aria-label="Scheduled event date"
               />
             </div>
 
             {/* Vibe Tags */}
-            <div style={{ marginBottom: 16 }}>
-              <label id="vibe-tags-label" className="label">
+            <fieldset style={{ border: 'none', padding: 0, margin: '0 0 16px 0' }}>
+              <legend id="vibe-tags-legend" className="label">
                 <Tag size={11} aria-hidden="true" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} />
                 Vibe / Theme Tags
-              </label>
+              </legend>
               <div
                 role="group"
-                aria-labelledby="vibe-tags-label"
+                aria-labelledby="vibe-tags-legend"
                 style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}
               >
                 {VIBE_PRESETS[form.eventType].map((tag) => (
@@ -278,7 +310,7 @@ export default function EventWizard({ isOpen, onClose, onGenerate, isLoading, lo
                   </button>
                 ))}
               </div>
-            </div>
+            </fieldset>
 
             {/* Dietary Notes */}
             <div style={{ marginBottom: 24 }}>
@@ -292,6 +324,7 @@ export default function EventWizard({ isOpen, onClose, onGenerate, isLoading, lo
                 placeholder="e.g., Pure veg, Halal, Jain, Gluten-free"
                 value={form.dietaryNotes}
                 onChange={(e) => setForm(f => ({ ...f, dietaryNotes: e.target.value }))}
+                aria-label="Dietary and cultural specifications"
               />
             </div>
 
@@ -299,12 +332,12 @@ export default function EventWizard({ isOpen, onClose, onGenerate, isLoading, lo
             <button
               type="submit"
               className="btn-primary"
-              disabled={!form.title || !form.city}
-              aria-label="Architect Event Blueprint with Groq LPU"
-              style={{ width: '100%', justifyContent: 'center', padding: '14px 24px', fontSize: 15 }}
+              disabled={!form.title || !form.city || isLoading}
+              aria-label="Generate complete event production blueprint"
+              style={{ width: '100%', justifyContent: 'center', padding: '14px', fontSize: 15 }}
             >
-              <Sparkles size={18} aria-hidden="true" />
-              Architect Event Blueprint ⚡
+              <Sparkles size={16} aria-hidden="true" />
+              <span>Generate Event Blueprint</span>
               <ChevronRight size={16} aria-hidden="true" />
             </button>
           </form>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Store,
   DollarSign,
@@ -46,6 +46,19 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
     bookingDeadline: '2 Weeks Before Event',
     redFlagWarning: 'Demands 100% upfront cash without GST invoice or signed service level contract.',
   });
+
+  // Keyboard accessibility: Escape key listener closes negotiation drawer and add modal
+  useEffect(() => {
+    if (!activeDrawerVendor && !showAddModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveDrawerVendor(null);
+        setShowAddModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeDrawerVendor, showAddModal]);
 
   const sym = currency === 'INR' ? '₹' : '$';
 

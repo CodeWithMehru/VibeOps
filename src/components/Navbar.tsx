@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Zap,
   Cpu,
@@ -38,6 +38,20 @@ export default function Navbar({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [keyInput, setKeyInput] = useState(apiKey);
+
+  // Keyboard accessibility: Escape key closes active menus and settings modal
+  useEffect(() => {
+    if (!settingsOpen && !presetOpen && !exportOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSettingsOpen(false);
+        setPresetOpen(false);
+        setExportOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [settingsOpen, presetOpen, exportOpen]);
 
   return (
     <>

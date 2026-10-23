@@ -20,6 +20,7 @@ import CrisisSimulator from '@/components/CrisisSimulator';
 import { WEDDING_PRESET, PRESET_MAP } from '@/lib/presets';
 import { rebalanceBudget } from '@/lib/budget-utils';
 import { generateFallbackCrisisResponse } from '@/lib/crisis-utils';
+import { applyQuickCommandMutation } from '@/lib/domain-engine';
 import {
   EventBlueprint,
   BudgetCategory,
@@ -42,6 +43,9 @@ export default function Home() {
   const [latencyMs, setLatencyMs] = useState<number>(312);
   const [crisisResponse, setCrisisResponse] = useState<CrisisResponse | null>(null);
   const [isRebalancing, setIsRebalancing] = useState<boolean>(false);
+  const [quickCommand, setQuickCommand] = useState<string>('');
+  const [commandFeedback, setCommandFeedback] = useState<string | null>(null);
+  const [isMutating, setIsMutating] = useState<boolean>(false);
 
   // Load API key from local storage on mount
   useEffect(() => {
@@ -241,6 +245,53 @@ export default function Home() {
     } finally {
       setIsLoading(false);
       setLoadingMessage('');
+    }
+  };
+
+  // Deterministic AI Blueprint Command Mutator
+  const handleExecuteCommand = async (cmdToRun: string) => {
+    const cmd = (cmdToRun || quickCommand).trim();
+    if (!cmd || isMutating) return;
+
+    setIsMutating(true);
+    setLoadingMessage(`Executing operational directive: "${cmd}"...`);
+
+    try {
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'mutate_blueprint',
+          payload: {
+            blueprint,
+            command: cmd,
+          },
+          clientApiKey: apiKey,
+        }),
+      });
+
+      if (!res.ok) throw new Error('Mutation API call failed');
+
+      const json = await res.json();
+      if (json.data && json.data.updatedBlueprint) {
+        setBlueprint(json.data.updatedBlueprint);
+        setCommandFeedback(json.data.appliedSummary);
+        setModelUsed(json.modelUsed || 'llama-3.3-70b-versatile');
+        setLatencyMs(json.latencyMs || 290);
+      } else {
+        throw new Error('Malformed mutation response');
+      }
+    } catch {
+      // Deterministic instant local mutation fallback
+      const result = applyQuickCommandMutation(blueprint, cmd);
+      setBlueprint(result.updatedBlueprint);
+      setCommandFeedback(result.appliedSummary);
+      setModelUsed('Deterministic Local Optimizer (Offline Mode)');
+      setLatencyMs(18);
+    } finally {
+      setIsMutating(false);
+      setQuickCommand('');
+      setTimeout(() => setCommandFeedback(null), 6000);
     }
   };
 
@@ -526,11 +577,141 @@ ${personalizedIdeas
           </div>
         </section>
 
-        {/* ─── Navigation Tabs ───────────────────────────────────────────── */}
+        {/* ─── Deterministic AI Command Mutator Bar ──────────────────────── */}
+        <section style={{ marginBottom: 20 }} aria-label="AI Blueprint Command Bar">
+          <form
+            role="search"
+            aria-label="AI Blueprint Command Mutator"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleExecuteCommand(quickCommand);
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              background: 'var(--surface)',
+              border: '1px solid var(--hairline-strong)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '8px 14px',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
+            }}
+          >
+            <Sparkles size={18} aria-hidden="true" color="var(--gold)" style={{ flexShrink: 0 }} />
+            <label htmlFor="ai-command-mutator-input" className="sr-only">
+              AI Operational Directive Command
+            </label>
+            <input
+              id="ai-command-mutator-input"
+              type="text"
+              placeholder="Type command (e.g. 'Cut Total Spend by 10%', 'Add Drone Photography Vendor', 'Add VIP Guest Buffer +25 PAX')..."
+              value={quickCommand}
+              onChange={(e) => setQuickCommand(e.target.value)}
+              disabled={isMutating}
+              aria-label="AI Operational Directive Command Input"
+              style={{
+                border: 'none',
+                background: 'transparent',
+                outline: 'none',
+                color: 'var(--text-primary)',
+                fontSize: '0.88rem',
+                flex: 1,
+              }}
+            />
+            <button
+              type="submit"
+              disabled={!quickCommand.trim() || isMutating}
+              className="btn-primary"
+              aria-label="Execute operational command on blueprint"
+              style={{ padding: '8px 16px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+            >
+              {isMutating ? 'Executing...' : 'Run Directive'}
+            </button>
+          </form>
+
+          {/* Feedback announcement */}
+          {commandFeedback && (
+            <div
+              role="status"
+              aria-live="polite"
+              style={{
+                marginTop: 8,
+                padding: '8px 14px',
+                background: 'var(--emerald-dim)',
+                border: '1px solid var(--emerald)',
+                borderRadius: 'var(--radius-sm)',
+                color: 'var(--emerald)',
+                fontSize: '0.82rem',
+                fontWeight: 600,
+              }}
+            >
+              ✓ {commandFeedback}
+            </div>
+          )}
+
+          {/* Suggestion Pills */}
+          <div
+            style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, flexWrap: 'wrap' }}
+            role="group"
+            aria-label="Preset operational command suggestions"
+          >
+            <span style={{ fontSize: '0.74rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Suggestions:
+            </span>
+            {[
+              'Cut Total Spend by 10%',
+              'Add Drone Photography Vendor',
+              'Add VIP Guest Buffer +25 PAX',
+            ].map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                aria-label={`Run quick suggestion: ${suggestion}`}
+                onClick={() => handleExecuteCommand(suggestion)}
+                disabled={isMutating}
+                style={{
+                  background: 'var(--surface-elevated)',
+                  border: '1px solid var(--hairline)',
+                  borderRadius: 20,
+                  padding: '4px 12px',
+                  fontSize: '0.74rem',
+                  color: 'var(--text-secondary)',
+                  cursor: isMutating ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--gold)';
+                  e.currentTarget.style.color = 'var(--gold)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--hairline)';
+                  e.currentTarget.style.color = 'var(--text-secondary)';
+                }}
+              >
+                + {suggestion}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* ─── Navigation Tabs with WAI-ARIA Arrow Navigation ────────────── */}
         <div
           role="tablist"
           aria-label="Workspace Sections"
           className="no-print"
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowRight') {
+              e.preventDefault();
+              const nextTab = (activeTab + 1) % tabs.length;
+              setActiveTab(nextTab);
+              document.getElementById(`tab-${nextTab}`)?.focus();
+            } else if (e.key === 'ArrowLeft') {
+              e.preventDefault();
+              const prevTab = (activeTab - 1 + tabs.length) % tabs.length;
+              setActiveTab(prevTab);
+              document.getElementById(`tab-${prevTab}`)?.focus();
+            }
+          }}
           style={{
             display: 'flex',
             gap: 8,
@@ -638,6 +819,7 @@ ${personalizedIdeas
                 });
                 setBlueprint(prev => ({ ...prev, budgetBreakdown: updatedBudget }));
               }}
+              eventSummary={blueprint.eventSummary}
             />
           )}
 

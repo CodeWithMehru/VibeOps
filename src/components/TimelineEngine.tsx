@@ -261,6 +261,7 @@ export default function TimelineEngine({ timeline, onUpdateTimeline, onTriggerCr
                 <button
                   className="no-print"
                   onClick={() => toggleStatus(item.id)}
+                  aria-pressed={item.status === 'completed'}
                   aria-label={`Milestone: ${item.title}. Current status: ${statusCfg.label}. Click to advance to ${nextLabel}`}
                   style={{
                     background: 'none',

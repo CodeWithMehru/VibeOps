@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Sparkles,
   Zap,
@@ -13,20 +13,34 @@ import {
   ListOrdered,
   X,
 } from 'lucide-react';
-import { PersonalizedIdea } from '@/lib/types';
+import { PersonalizedIdea, EventSummary } from '@/lib/types';
 import { formatNumber } from '@/lib/format';
+import GuestCohortStudio from './GuestCohortStudio';
 
 interface VibeLabProps {
   ideas: PersonalizedIdea[];
   currency: string;
   onUpdateIdeas: (updated: PersonalizedIdea[]) => void;
   onShortlistToBudget?: (idea: PersonalizedIdea) => void;
+  eventSummary?: EventSummary;
 }
 
-export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToBudget }: VibeLabProps) {
+export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToBudget, eventSummary }: VibeLabProps) {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [expandedBlueprintId, setExpandedBlueprintId] = useState<string | null>(null);
+
+  // Keyboard accessibility: Escape key listener for custom idea modal
+  useEffect(() => {
+    if (!showAddModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowAddModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showAddModal]);
   const [newIdea, setNewIdea] = useState({
     title: '',
     category: 'Guest Engagement',
@@ -93,6 +107,9 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }} role="region" aria-label="Personalized Ideas & Vibe Lab">
+      {/* ─── Guest Cohort & Dietary Matrix Studio ───────────────────────── */}
+      {eventSummary && <GuestCohortStudio eventSummary={eventSummary} />}
+
       {/* ─── Top Metrics Bar ────────────────────────────────────────────── */}
       <section
         style={{
@@ -406,6 +423,7 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
                   <button
                     onClick={() => setExpandedBlueprintId(isBlueprintExpanded ? null : idea.id)}
                     aria-expanded={isBlueprintExpanded}
+                    aria-controls={`sop-panel-${idea.id}`}
                     aria-label={`${isBlueprintExpanded ? 'Collapse' : 'Expand'} execution blueprint for ${idea.title}`}
                     style={{
                       background: 'transparent',
@@ -420,7 +438,10 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
                   </button>
                 </div>
 
-                <ol style={{ display: 'flex', flexDirection: 'column', gap: 8, listStyle: 'none', padding: 0, margin: 0 }}>
+                <ol
+                  id={`sop-panel-${idea.id}`}
+                  style={{ display: 'flex', flexDirection: 'column', gap: 8, listStyle: 'none', padding: 0, margin: 0 }}
+                >
                   {(isBlueprintExpanded ? steps : steps.slice(0, 2)).map((st, idx) => (
                     <li
                       key={idx}
