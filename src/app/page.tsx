@@ -7,16 +7,8 @@ import {
   Store,
   Sparkles,
   AlertOctagon,
-  Calendar,
   MapPin,
   Users,
-  Wallet,
-  UtensilsCrossed,
-  Sliders,
-  ChevronRight,
-  ShieldAlert,
-  Flame,
-  Award,
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import EventWizard from '@/components/EventWizard';
@@ -26,6 +18,8 @@ import VendorWarRoom from '@/components/VendorWarRoom';
 import VibeLab from '@/components/VibeLab';
 import CrisisSimulator from '@/components/CrisisSimulator';
 import { WEDDING_PRESET, PRESET_MAP } from '@/lib/presets';
+import { rebalanceBudget } from '@/lib/budget-utils';
+import { generateFallbackCrisisResponse } from '@/lib/crisis-utils';
 import {
   EventBlueprint,
   BudgetCategory,
@@ -193,32 +187,8 @@ export default function Home() {
         setLatencyMs(json.latencyMs || 280);
       }
     } catch {
-      // Deterministic Local Fallback
-      const current = [...blueprint.budgetBreakdown];
-      const lockedSum = current.filter(c => c.locked).reduce((s, c) => s + c.allocatedAmount, 0);
-      const unlocked = current.filter(c => !c.locked);
-
-      let targetTotal = blueprint.eventSummary.totalBudget;
-      if (mode === 'slash15') {
-        targetTotal = Math.round(blueprint.eventSummary.totalBudget * 0.85);
-      }
-
-      const availableForUnlocked = Math.max(0, targetTotal - lockedSum);
-      const unlockedWeightSum = unlocked.reduce((s, c) => s + c.allocatedAmount, 0) || 1;
-
-      const updated = current.map(c => {
-        if (c.locked) return c;
-        const newAlloc = Math.round((c.allocatedAmount / unlockedWeightSum) * availableForUnlocked);
-        const newPct = Math.round((newAlloc / targetTotal) * 100);
-        return {
-          ...c,
-          allocatedAmount: newAlloc,
-          percentage: newPct,
-          aiSavingHack: mode === 'slash15'
-            ? `AI 15% Reduction Applied: Shifted vendor booking to off-peak slots and replaced imported items with premium regional substitutes.`
-            : c.aiSavingHack,
-        };
-      });
+      // Deterministic Local Fallback using tested budget engine
+      const updated = rebalanceBudget(blueprint.budgetBreakdown, blueprint.eventSummary.totalBudget, mode);
 
       setBlueprint(prev => ({
         ...prev,
@@ -261,35 +231,8 @@ export default function Home() {
         setActiveTab(4); // Switch to Crisis War-Room tab
       }
     } catch {
-      // High-Craft Local Fallback Crisis Response
-      const fallbackCrisis: CrisisResponse = {
-        crisisTitle: scenario.length > 50 ? scenario.slice(0, 48) + '...' : scenario,
-        severity: scenario.toLowerCase().includes('rain') || scenario.toLowerCase().includes('power') ? 'CRITICAL' : 'HIGH',
-        immediateActions: [
-          'T+00m: Halt non-essential stage operations immediately and secure audio-visual power feeds with waterproof isolation covers.',
-          'T+05m: Convene with venue general manager and on-site vendor leads in the production green-room.',
-          'T+10m: Activate secondary covered banquet space and redirect guest flow via covered canopy walkways.',
-          'T+20m: Deploy roving hospitality team offering hot welcome drinks / finger snacks to keep guest mood elevated.',
-          'T+30m: Brief emcee with revised timeline sequence and announce slight schedule adjustment warmly to guests.',
-        ],
-        budgetImpactDelta: Math.round(blueprint.eventSummary.totalBudget * 0.035),
-        reallocatedFrom: 'Unallocated Contingency Reserve & Miscellaneous Decor Buffer',
-        timelineAdjustments: [
-          {
-            originalTask: 'Outdoor Lawn Welcome & Main Walk-in (Scheduled)',
-            newPlan: 'Relocated into Grand Covered Atrium with acoustic lounge music backdrop',
-          },
-          {
-            originalTask: 'Primary Stage Ceremony & Speeches',
-            newPlan: 'Shifted forward by 30 minutes while technical teams test backup power load',
-          },
-          {
-            originalTask: 'Full Buffet Dinner Spread Opening',
-            newPlan: 'Extended cocktail & live appetizer service by 40 minutes; main dining opens at revised slot',
-          },
-        ],
-        emergencyAnnouncementScript: `Good evening ladies and gentlemen! We truly appreciate your warmth and vibrant energy tonight. To ensure everyone enjoys the celebration in complete comfort, we are transitioning our upcoming segment into the Grand Ballroom foyer. Please join us at the lounge area where live refreshments and appetizers are now being served. The grand celebrations will resume momentarily!`,
-      };
+      // High-Craft Local Fallback Crisis Response via tested chaos engine
+      const fallbackCrisis = generateFallbackCrisisResponse(scenario, blueprint.eventSummary.totalBudget);
 
       setCrisisResponse(fallbackCrisis);
       setModelUsed('llama-3.3-70b-versatile (Offline War-Room Protocol)');
@@ -398,14 +341,14 @@ ${personalizedIdeas
   };
 
   const tabs = [
-    { id: 0, label: 'Budget Matrix & Catering', icon: <PieChart size={16} /> },
-    { id: 1, label: 'Run-of-Show Timeline', icon: <Clock size={16} /> },
-    { id: 2, label: 'Vendor War-Room', icon: <Store size={16} /> },
-    { id: 3, label: 'Personalized Vibe Lab', icon: <Sparkles size={16} /> },
+    { id: 0, label: 'Budget Matrix & Catering', icon: <PieChart size={16} aria-hidden="true" /> },
+    { id: 1, label: 'Run-of-Show Timeline', icon: <Clock size={16} aria-hidden="true" /> },
+    { id: 2, label: 'Vendor War-Room', icon: <Store size={16} aria-hidden="true" /> },
+    { id: 3, label: 'Personalized Vibe Lab', icon: <Sparkles size={16} aria-hidden="true" /> },
     {
       id: 4,
       label: 'Crisis War-Room',
-      icon: <AlertOctagon size={16} />,
+      icon: <AlertOctagon size={16} aria-hidden="true" />,
       hasAlert: !!crisisResponse,
     },
   ];
@@ -425,9 +368,17 @@ ${personalizedIdeas
         onApiKeyChange={handleApiKeyChange}
       />
 
-      <main style={{ maxWidth: 1440, margin: '0 auto', padding: '24px 24px 60px 24px' }}>
+      {/* Accessible Live Telemetry Region */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {isLoading
+          ? loadingMessage
+          : `Active section: ${tabs[activeTab].label} for ${blueprint.eventSummary.title}`}
+      </div>
+
+      <main id="main-content" style={{ maxWidth: 1440, margin: '0 auto', padding: '24px 24px 60px 24px' }}>
         {/* ─── Hero / Event Summary Banner ──────────────────────────────── */}
         <section
+          aria-labelledby="event-hero-title"
           style={{
             background: 'linear-gradient(135deg, rgba(26,29,43,0.95) 0%, rgba(18,20,28,0.98) 100%)',
             border: '1px solid var(--hairline-strong)',
@@ -472,7 +423,7 @@ ${personalizedIdeas
                     gap: 5,
                   }}
                 >
-                  <MapPin size={12} /> {blueprint.eventSummary.city}
+                  <MapPin size={12} aria-hidden="true" /> {blueprint.eventSummary.city}
                 </span>
 
                 <span
@@ -489,15 +440,16 @@ ${personalizedIdeas
                     gap: 5,
                   }}
                 >
-                  <Users size={12} /> {blueprint.eventSummary.guestCount} PAX
+                  <Users size={12} aria-hidden="true" /> {blueprint.eventSummary.guestCount} PAX
                 </span>
 
                 {/* Vibe palette dots */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 4 }} aria-label="Event vibe color palette">
                   {blueprint.eventSummary.vibePalette?.map((color, idx) => (
                     <span
                       key={idx}
                       title={color}
+                      aria-label={`Color swatch: ${color}`}
                       style={{
                         width: 12,
                         height: 12,
@@ -512,7 +464,7 @@ ${personalizedIdeas
               </div>
 
               {/* Title & Tagline */}
-              <h1 style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em', marginBottom: 4 }}>
+              <h1 id="event-hero-title" style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em', marginBottom: 4 }}>
                 {blueprint.eventSummary.title}
               </h1>
               <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
@@ -523,6 +475,8 @@ ${personalizedIdeas
             {/* Right: Quick KPI Callout & Architect Button */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               <div
+                tabIndex={0}
+                aria-label={`Total Operational Budget: ${sym}${formatNumber(blueprint.eventSummary.totalBudget)}. Catering: ${blueprint.eventSummary.cateringMatrix?.recommendedPlates} plates planned with ${blueprint.eventSummary.cateringMatrix?.bufferPercentage}% buffer.`}
                 style={{
                   background: 'var(--surface)',
                   border: '1px solid var(--hairline)',
@@ -547,6 +501,9 @@ ${personalizedIdeas
 
               <button
                 onClick={() => setWizardOpen(true)}
+                aria-label="Open Event Architect Wizard"
+                aria-haspopup="dialog"
+                aria-expanded={wizardOpen}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -563,7 +520,7 @@ ${personalizedIdeas
                   transition: 'all 0.15s ease',
                 }}
               >
-                <Sparkles size={16} /> Architect New Blueprint
+                <Sparkles size={16} aria-hidden="true" /> Architect New Blueprint
               </button>
             </div>
           </div>
@@ -571,6 +528,8 @@ ${personalizedIdeas
 
         {/* ─── Navigation Tabs ───────────────────────────────────────────── */}
         <div
+          role="tablist"
+          aria-label="Workspace Sections"
           className="no-print"
           style={{
             display: 'flex',
@@ -586,6 +545,11 @@ ${personalizedIdeas
             return (
               <button
                 key={tab.id}
+                role="tab"
+                id={`tab-${tab.id}`}
+                aria-selected={isActive}
+                aria-controls={`tabpanel-${tab.id}`}
+                tabIndex={isActive ? 0 : -1}
                 onClick={() => setActiveTab(tab.id)}
                 style={{
                   display: 'flex',
@@ -608,6 +572,7 @@ ${personalizedIdeas
                 <span>{tab.label}</span>
                 {tab.hasAlert && (
                   <span
+                    aria-label="Crisis alert active"
                     style={{
                       width: 8,
                       height: 8,
@@ -624,7 +589,13 @@ ${personalizedIdeas
         </div>
 
         {/* ─── Tab Content Workspace ─────────────────────────────────────── */}
-        <div>
+        <div
+          role="tabpanel"
+          id={`tabpanel-${activeTab}`}
+          aria-labelledby={`tab-${activeTab}`}
+          tabIndex={0}
+          style={{ outline: 'none' }}
+        >
           {activeTab === 0 && (
             <BudgetMatrix
               blueprint={blueprint}
@@ -656,7 +627,6 @@ ${personalizedIdeas
               currency={blueprint.eventSummary.currency}
               onUpdateIdeas={updated => setBlueprint(prev => ({ ...prev, personalizedIdeas: updated }))}
               onShortlistToBudget={idea => {
-                // Optionally inject idea cost into decor or guest entertainment budget
                 const updatedBudget = blueprint.budgetBreakdown.map(c => {
                   if (c.category.toLowerCase().includes('decor') || c.category.toLowerCase().includes('entertainment') || c.category.toLowerCase().includes('experience')) {
                     return {
@@ -683,6 +653,23 @@ ${personalizedIdeas
           )}
         </div>
       </main>
+
+      {/* ─── Semantic Footer Landmark ─────────────────────────────────────── */}
+      <footer
+        role="contentinfo"
+        className="no-print"
+        style={{
+          borderTop: '1px solid var(--hairline)',
+          padding: '24px 20px',
+          textAlign: 'center',
+          fontSize: '0.8rem',
+          color: 'var(--text-tertiary)',
+        }}
+      >
+        <p>
+          VibeOps — Autonomous Event Production Command Center & Crisis War-Room • Built for Hack2Skill PromptWars 2026 Challenge 5
+        </p>
+      </footer>
 
       {/* ─── Event Configuration Wizard Modal ────────────────────────────── */}
       <EventWizard

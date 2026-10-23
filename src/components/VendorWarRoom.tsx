@@ -5,7 +5,6 @@ import {
   Store,
   DollarSign,
   TrendingDown,
-  CheckSquare,
   AlertTriangle,
   MessageCircle,
   Mail,
@@ -128,16 +127,19 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }} role="region" aria-label="Vendor War-Room and Negotiation Studio">
       {/* ─── Top Metrics Bar ────────────────────────────────────────────── */}
-      <div
+      <section
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
           gap: 16,
         }}
+        aria-label="Vendor Procurement Financial Overview"
       >
         <div
+          tabIndex={0}
+          aria-label={`Estimated Vendor Spend: ${sym}${formatNumber(totalEstimated)} across ${vendors.length} vendors`}
           style={{
             background: 'var(--surface)',
             border: '1px solid var(--hairline)',
@@ -151,7 +153,7 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
             <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Est. Vendor Spend
             </span>
-            <Store size={16} style={{ color: 'var(--sky)' }} />
+            <Store size={16} aria-hidden="true" style={{ color: 'var(--sky)' }} />
           </div>
           <div
             suppressHydrationWarning
@@ -165,6 +167,8 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
         </div>
 
         <div
+          tabIndex={0}
+          aria-label={`Negotiated Target: ${sym}${formatNumber(totalNegotiated)}`}
           style={{
             background: 'var(--surface)',
             border: '1px solid var(--hairline)',
@@ -178,7 +182,7 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
             <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Negotiated Target
             </span>
-            <DollarSign size={16} style={{ color: 'var(--gold)' }} />
+            <DollarSign size={16} aria-hidden="true" style={{ color: 'var(--gold)' }} />
           </div>
           <div
             suppressHydrationWarning
@@ -192,6 +196,8 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
         </div>
 
         <div
+          tabIndex={0}
+          aria-label={`Total Savings Unlocked: +${sym}${formatNumber(totalSavings)}`}
           style={{
             background: 'var(--surface)',
             border: '1px solid var(--hairline)',
@@ -205,7 +211,7 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
             <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Total Savings Unlocked
             </span>
-            <TrendingDown size={16} style={{ color: 'var(--emerald)' }} />
+            <TrendingDown size={16} aria-hidden="true" style={{ color: 'var(--emerald)' }} />
           </div>
           <div
             suppressHydrationWarning
@@ -219,6 +225,8 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
         </div>
 
         <div
+          tabIndex={0}
+          aria-label={`Vendor Pipeline: ${bookedCount} of ${vendors.length} contracts secured`}
           style={{
             background: 'var(--surface)',
             border: '1px solid var(--hairline)',
@@ -232,7 +240,7 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
             <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Vendor Pipeline
             </span>
-            <ShieldCheck size={16} style={{ color: 'var(--violet)' }} />
+            <ShieldCheck size={16} aria-hidden="true" style={{ color: 'var(--violet)' }} />
           </div>
           <div style={{ fontSize: '1.6rem', fontWeight: 700, fontFamily: 'var(--mono-font)', color: 'var(--text-primary)' }}>
             {bookedCount} / {vendors.length}
@@ -241,7 +249,7 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
             {Math.round((bookedCount / (vendors.length || 1)) * 100)}% contracts secured
           </div>
         </div>
-      </div>
+      </section>
 
       {/* ─── Filter & Action Controls ───────────────────────────────────── */}
       <div
@@ -256,14 +264,17 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
           border: '1px solid var(--hairline)',
           borderRadius: 'var(--radius-md)',
         }}
+        className="no-print"
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }} role="group" aria-label="Vendor Status Filters">
           <span style={{ fontSize: '0.82rem', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Filter size={14} /> Filter Status:
+            <Filter size={14} aria-hidden="true" /> Filter Status:
           </span>
           {(['all', 'shortlisting', 'negotiating', 'booked', 'paid'] as const).map(st => (
             <button
               key={st}
+              aria-pressed={statusFilter === st}
+              aria-label={`Filter vendors: ${st === 'all' ? 'All Vendors' : STATUS_LABELS[st].label}`}
               onClick={() => setStatusFilter(st)}
               style={{
                 padding: '5px 12px',
@@ -284,6 +295,9 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
 
         <button
           onClick={() => setShowAddModal(true)}
+          aria-label="Add new vendor slot"
+          aria-haspopup="dialog"
+          aria-expanded={showAddModal}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -299,7 +313,7 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
             transition: 'background 0.15s ease',
           }}
         >
-          <Plus size={14} /> Add Vendor Slot
+          <Plus size={14} aria-hidden="true" /> Add Vendor Slot
         </button>
       </div>
 
@@ -310,6 +324,8 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
           gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
           gap: 20,
         }}
+        role="list"
+        aria-label="Vendors Checklist"
       >
         {filteredVendors.map(vendor => {
           const actualCost = vendor.negotiatedCost !== undefined ? vendor.negotiatedCost : vendor.estimatedCost;
@@ -319,8 +335,9 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
           const totalChecks = vendor.verificationChecklist.length;
 
           return (
-            <div
+            <article
               key={vendor.id}
+              role="listitem"
               style={{
                 background: 'var(--surface)',
                 border: '1px solid var(--hairline)',
@@ -339,12 +356,13 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
                     {vendor.vendorType}
                   </h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.78rem', color: 'var(--text-tertiary)' }}>
-                    <Calendar size={13} /> Target: {vendor.bookingDeadline}
+                    <Calendar size={13} aria-hidden="true" /> Target: {vendor.bookingDeadline}
                   </div>
                 </div>
 
                 <select
                   value={vendor.status}
+                  aria-label={`Update contract status for ${vendor.vendorType}`}
                   onChange={e => handleStatusChange(vendor.id, e.target.value as VendorStatus)}
                   style={{
                     background: 'var(--surface-elevated)',
@@ -390,13 +408,15 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
                 </div>
 
                 <div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: 2 }}>
+                  <label htmlFor={`cost-${vendor.id}`} style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: 2 }}>
                     Negotiated Cost
-                  </div>
+                  </label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <span style={{ color: 'var(--gold)', fontWeight: 600, fontSize: '0.85rem' }}>{sym}</span>
+                    <span style={{ color: 'var(--gold)', fontWeight: 600, fontSize: '0.85rem' }} aria-hidden="true">{sym}</span>
                     <input
+                      id={`cost-${vendor.id}`}
                       type="text"
+                      aria-label={`Negotiated cost for ${vendor.vendorType}`}
                       value={vendor.negotiatedCost !== undefined ? vendor.negotiatedCost : vendor.estimatedCost}
                       onChange={e => handleNegotiatedCostChange(vendor.id, e.target.value)}
                       style={{
@@ -429,6 +449,7 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
               {/* Red Flag Warning */}
               {vendor.redFlagWarning && (
                 <div
+                  role="alert"
                   style={{
                     background: 'rgba(244, 63, 94, 0.08)',
                     border: '1px solid rgba(244, 63, 94, 0.25)',
@@ -439,7 +460,7 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
                     gap: 10,
                   }}
                 >
-                  <AlertTriangle size={15} style={{ color: 'var(--crisis-coral)', flexShrink: 0, marginTop: 2 }} />
+                  <AlertTriangle size={15} aria-hidden="true" style={{ color: 'var(--crisis-coral)', flexShrink: 0, marginTop: 2 }} />
                   <div style={{ fontSize: '0.76rem', color: '#FDA4AF', lineHeight: 1.45 }}>
                     <strong style={{ color: '#FFE4E6' }}>Contract Red Flag: </strong>
                     {vendor.redFlagWarning}
@@ -460,9 +481,9 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
                   }}
                 >
                   <span style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <ShieldCheck size={14} style={{ color: 'var(--emerald)' }} /> Anti-Fraud Verification
+                    <ShieldCheck size={14} aria-hidden="true" style={{ color: 'var(--emerald)' }} /> Anti-Fraud Verification
                   </span>
-                  <span style={{ fontFamily: 'var(--mono-font)' }}>
+                  <span className="font-mono">
                     {checkedCount} / {totalChecks}
                   </span>
                 </div>
@@ -470,8 +491,9 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {vendor.verificationChecklist.map((item, idx) => {
                     const isChecked = checkedArr[idx] || false;
+                    const checkId = `check-${vendor.id}-${idx}`;
                     return (
-                      <label
+                      <div
                         key={idx}
                         style={{
                           display: 'flex',
@@ -479,12 +501,12 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
                           gap: 8,
                           fontSize: '0.78rem',
                           color: isChecked ? 'var(--text-primary)' : 'var(--text-secondary)',
-                          cursor: 'pointer',
-                          userSelect: 'none',
                         }}
                       >
                         <input
+                          id={checkId}
                           type="checkbox"
+                          aria-label={`Verification item: ${item} for ${vendor.vendorType}`}
                           checked={isChecked}
                           onChange={() => handleToggleChecklist(vendor.id, idx)}
                           style={{
@@ -493,10 +515,18 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
                             cursor: 'pointer',
                           }}
                         />
-                        <span style={{ textDecoration: isChecked ? 'line-through' : 'none', opacity: isChecked ? 0.8 : 1 }}>
+                        <label
+                          htmlFor={checkId}
+                          style={{
+                            cursor: 'pointer',
+                            userSelect: 'none',
+                            textDecoration: isChecked ? 'line-through' : 'none',
+                            opacity: isChecked ? 0.8 : 1,
+                          }}
+                        >
                           {item}
-                        </span>
-                      </label>
+                        </label>
+                      </div>
                     );
                   })}
                 </div>
@@ -509,6 +539,8 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
                     setActiveDrawerVendor(vendor);
                     setActiveScriptTab('hinglish');
                   }}
+                  aria-label={`Open negotiation scripts and WhatsApp generator for ${vendor.vendorType}`}
+                  aria-haspopup="dialog"
                   style={{
                     width: '100%',
                     display: 'flex',
@@ -528,12 +560,12 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
                   onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--gold)')}
                   onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--hairline-strong)')}
                 >
-                  <MessageCircle size={15} style={{ color: 'var(--gold)' }} />
+                  <MessageCircle size={15} aria-hidden="true" style={{ color: 'var(--gold)' }} />
                   Negotiation Script & WhatsApp
-                  <ArrowRight size={14} style={{ color: 'var(--text-tertiary)' }} />
+                  <ArrowRight size={14} aria-hidden="true" style={{ color: 'var(--text-tertiary)' }} />
                 </button>
               </div>
-            </div>
+            </article>
           );
         })}
       </div>
@@ -552,6 +584,9 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
             justifyContent: 'center',
             padding: 16,
           }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="script-modal-title"
           onClick={() => setActiveDrawerVendor(null)}
         >
           <div
@@ -572,7 +607,7 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                <h3 id="script-modal-title" style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                   {activeDrawerVendor.vendorType} — Negotiation Deck
                 </h3>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>
@@ -581,6 +616,7 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
               </div>
               <button
                 onClick={() => setActiveDrawerVendor(null)}
+                aria-label="Close negotiation script drawer"
                 style={{
                   background: 'var(--surface-elevated)',
                   border: '1px solid var(--hairline)',
@@ -594,12 +630,14 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
                   cursor: 'pointer',
                 }}
               >
-                <X size={16} />
+                <X size={16} aria-hidden="true" />
               </button>
             </div>
 
             {/* Script Tab Switcher */}
             <div
+              role="tablist"
+              aria-label="Negotiation Script Formats"
               style={{
                 display: 'flex',
                 background: 'var(--surface-elevated)',
@@ -610,6 +648,10 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
               }}
             >
               <button
+                role="tab"
+                id="tab-hinglish"
+                aria-selected={activeScriptTab === 'hinglish'}
+                aria-controls="panel-hinglish"
                 onClick={() => setActiveScriptTab('hinglish')}
                 style={{
                   flex: 1,
@@ -627,9 +669,13 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
                   color: activeScriptTab === 'hinglish' ? 'var(--emerald)' : 'var(--text-secondary)',
                 }}
               >
-                <MessageCircle size={15} /> WhatsApp (Hinglish / Local Tone)
+                <MessageCircle size={15} aria-hidden="true" /> WhatsApp (Hinglish / Local Tone)
               </button>
               <button
+                role="tab"
+                id="tab-email"
+                aria-selected={activeScriptTab === 'email'}
+                aria-controls="panel-email"
                 onClick={() => setActiveScriptTab('email')}
                 style={{
                   flex: 1,
@@ -647,7 +693,7 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
                   color: activeScriptTab === 'email' ? 'var(--sky)' : 'var(--text-secondary)',
                 }}
               >
-                <Mail size={15} /> Formal RFQ Email
+                <Mail size={15} aria-hidden="true" /> Formal RFQ Email
               </button>
             </div>
 
@@ -657,10 +703,20 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
                 activeScriptTab === 'hinglish'
                   ? activeDrawerVendor.scripts.hinglishWhatsApp
                   : activeDrawerVendor.scripts.formalEmail;
+              const panelId = activeScriptTab === 'hinglish' ? 'panel-hinglish' : 'panel-email';
+              const labelledBy = activeScriptTab === 'hinglish' ? 'tab-hinglish' : 'tab-email';
 
               return (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div
+                  role="tabpanel"
+                  id={panelId}
+                  aria-labelledby={labelledBy}
+                  tabIndex={0}
+                  style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
+                >
                   <div
+                    tabIndex={0}
+                    aria-label={`Script content in ${activeScriptTab === 'hinglish' ? 'Hinglish WhatsApp format' : 'Formal RFQ email format'}`}
                     style={{
                       background: 'var(--carbon)',
                       border: '1px solid var(--hairline)',
@@ -682,6 +738,7 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                     <button
                       onClick={() => handleCopyScript(currentScript)}
+                      aria-label="Copy negotiation script to clipboard"
                       style={{
                         flex: 1,
                         display: 'flex',
@@ -699,7 +756,7 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
                         transition: 'all 0.15s ease',
                       }}
                     >
-                      {copied ? <Check size={16} /> : <Copy size={16} />}
+                      {copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
                       {copied ? 'Copied to Clipboard!' : 'Copy Script'}
                     </button>
 
@@ -708,6 +765,7 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
                         href={`https://wa.me/?text=${encodeURIComponent(currentScript)}`}
                         target="_blank"
                         rel="noopener noreferrer"
+                        aria-label={`Open WhatsApp message to ${activeDrawerVendor.vendorType}`}
                         style={{
                           flex: 1,
                           display: 'flex',
@@ -724,13 +782,14 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
                           cursor: 'pointer',
                         }}
                       >
-                        <MessageCircle size={16} /> Open in WhatsApp <ExternalLink size={14} />
+                        <MessageCircle size={16} aria-hidden="true" /> Open in WhatsApp <ExternalLink size={14} aria-hidden="true" />
                       </a>
                     ) : (
                       <a
                         href={`mailto:?subject=${encodeURIComponent(
                           `Request for Quotation — ${activeDrawerVendor.vendorType}`
                         )}&body=${encodeURIComponent(currentScript)}`}
+                        aria-label={`Open email client with RFQ to ${activeDrawerVendor.vendorType}`}
                         style={{
                           flex: 1,
                           display: 'flex',
@@ -747,7 +806,7 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
                           cursor: 'pointer',
                         }}
                       >
-                        <Mail size={16} /> Open in Email Client <ExternalLink size={14} />
+                        <Mail size={16} aria-hidden="true" /> Open in Email Client <ExternalLink size={14} aria-hidden="true" />
                       </a>
                     )}
                   </div>
@@ -772,6 +831,9 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
             justifyContent: 'center',
             padding: 16,
           }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-vendor-modal-title"
           onClick={() => setShowAddModal(false)}
         >
           <div
@@ -787,11 +849,12 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
             onClick={e => e.stopPropagation()}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              <h3 id="add-vendor-modal-title" style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                 Add New Vendor Slot
               </h3>
               <button
                 onClick={() => setShowAddModal(false)}
+                aria-label="Close add vendor modal"
                 style={{
                   background: 'transparent',
                   border: 'none',
@@ -799,16 +862,17 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
                   cursor: 'pointer',
                 }}
               >
-                <X size={18} />
+                <X size={18} aria-hidden="true" />
               </button>
             </div>
 
             <form onSubmit={handleAddVendor} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 6 }}>
+                <label htmlFor="new-vendor-type" style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 6 }}>
                   Vendor Type / Specialization *
                 </label>
                 <input
+                  id="new-vendor-type"
                   type="text"
                   placeholder="e.g., Drone Videography, Baraat Band, Dessert Cart"
                   value={newVendor.vendorType}
@@ -828,10 +892,11 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 6 }}>
+                <label htmlFor="new-vendor-budget" style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 6 }}>
                   Estimated Budget ({currency})
                 </label>
                 <input
+                  id="new-vendor-budget"
                   type="number"
                   value={newVendor.estimatedCost}
                   onChange={e => setNewVendor(v => ({ ...v, estimatedCost: Number(e.target.value) }))}
@@ -849,10 +914,11 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 6 }}>
+                <label htmlFor="new-vendor-deadline" style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 6 }}>
                   Target Booking Deadline
                 </label>
                 <input
+                  id="new-vendor-deadline"
                   type="text"
                   placeholder="e.g. 3 Weeks Prior"
                   value={newVendor.bookingDeadline}
@@ -871,10 +937,11 @@ export default function VendorWarRoom({ vendors, currency, onUpdateVendors }: Ve
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 6 }}>
+                <label htmlFor="new-vendor-warning" style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 6 }}>
                   Red Flag / Watchout Note
                 </label>
                 <textarea
+                  id="new-vendor-warning"
                   value={newVendor.redFlagWarning}
                   onChange={e => setNewVendor(v => ({ ...v, redFlagWarning: e.target.value }))}
                   rows={2}

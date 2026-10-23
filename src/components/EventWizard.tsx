@@ -50,7 +50,8 @@ export default function EventWizard({ isOpen, onClose, onGenerate, isLoading, lo
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!form.title || !form.city) return;
     onGenerate(form);
   };
@@ -58,7 +59,13 @@ export default function EventWizard({ isOpen, onClose, onGenerate, isLoading, lo
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div
+      className="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="wizard-modal-title"
+      onClick={onClose}
+    >
       <div
         className="modal-content"
         onClick={(e) => e.stopPropagation()}
@@ -67,23 +74,28 @@ export default function EventWizard({ isOpen, onClose, onGenerate, isLoading, lo
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
           <div>
-            <h2 style={{ fontSize: 22, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Sparkles size={22} color="var(--gold)" />
+            <h2 id="wizard-modal-title" style={{ fontSize: 22, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Sparkles size={22} color="var(--gold)" aria-hidden="true" />
               Architect Event Blueprint
             </h2>
             <p style={{ fontSize: 13, color: 'var(--text-tertiary)', marginTop: 4 }}>
               Configure your event parameters for AI-powered planning
             </p>
           </div>
-          <button className="btn-ghost" onClick={onClose} style={{ padding: 6 }}>
-            <X size={18} />
+          <button
+            className="btn-ghost"
+            aria-label="Close Event Architect Wizard"
+            onClick={onClose}
+            style={{ padding: 6 }}
+          >
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
 
         {/* Loading State */}
         {isLoading ? (
-          <div style={{ textAlign: 'center', padding: '48px 0' }}>
-            <div className="spinner" style={{ width: 40, height: 40, margin: '0 auto 20px', borderWidth: 3 }} />
+          <div style={{ textAlign: 'center', padding: '48px 0' }} role="status" aria-live="polite">
+            <div className="spinner" aria-hidden="true" style={{ width: 40, height: 40, margin: '0 auto 20px', borderWidth: 3 }} />
             <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--gold)', marginBottom: 8 }}>
               {loadingMessage || 'Architecting your event blueprint...'}
             </p>
@@ -92,28 +104,37 @@ export default function EventWizard({ isOpen, onClose, onGenerate, isLoading, lo
             </p>
             <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 300, margin: '24px auto 0' }}>
               {['Analyzing event parameters...', 'Computing budget allocations...', 'Generating vendor scripts...', 'Building crisis protocols...'].map((step, i) => (
-                <div key={i} style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '8px 12px',
-                  background: 'var(--surface)',
-                  borderRadius: 'var(--radius-sm)',
-                  animation: `fadeIn 0.3s ease ${i * 0.3}s both`,
-                }}>
-                  <div className="spinner" style={{ width: 14, height: 14 }} />
+                <div
+                  key={i}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '8px 12px',
+                    background: 'var(--surface)',
+                    borderRadius: 'var(--radius-sm)',
+                    animation: `fadeIn 0.3s ease ${i * 0.3}s both`,
+                  }}
+                >
+                  <div className="spinner" aria-hidden="true" style={{ width: 14, height: 14 }} />
                   <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{step}</span>
                 </div>
               ))}
             </div>
           </div>
         ) : (
-          <>
+          <form onSubmit={handleSubmit}>
             {/* Event Type */}
             <div style={{ marginBottom: 20 }}>
-              <label className="label">Event Type</label>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <label id="event-type-group-label" className="label">Event Type</label>
+              <div
+                role="group"
+                aria-labelledby="event-type-group-label"
+                style={{ display: 'flex', gap: 8 }}
+              >
                 {(['Wedding', 'Birthday', 'Community Event'] as EventCategory[]).map((type) => (
                   <button
                     key={type}
+                    type="button"
+                    aria-pressed={form.eventType === type}
                     onClick={() => setForm(f => ({ ...f, eventType: type, vibeTags: [] }))}
                     style={{
                       flex: 1,
@@ -128,7 +149,8 @@ export default function EventWizard({ isOpen, onClose, onGenerate, isLoading, lo
                       transition: 'all 0.2s',
                     }}
                   >
-                    {type === 'Wedding' ? '💒' : type === 'Birthday' ? '🎂' : '🚀'} {type}
+                    <span aria-hidden="true">{type === 'Wedding' ? '💒 ' : type === 'Birthday' ? '🎂 ' : '🚀 '}</span>
+                    {type}
                   </button>
                 ))}
               </div>
@@ -137,23 +159,28 @@ export default function EventWizard({ isOpen, onClose, onGenerate, isLoading, lo
             {/* Title + City */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
               <div>
-                <label className="label">Event Title</label>
+                <label htmlFor="wizard-event-title" className="label">Event Title</label>
                 <input
+                  id="wizard-event-title"
                   className="input-field"
                   placeholder="e.g., Royal Heritage Reception"
                   value={form.title}
                   onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))}
+                  required
                 />
               </div>
               <div>
-                <label className="label">
-                  <MapPin size={11} style={{ display: 'inline', verticalAlign: 'middle' }} /> City / Location
+                <label htmlFor="wizard-event-city" className="label">
+                  <MapPin size={11} aria-hidden="true" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} />
+                  City / Location
                 </label>
                 <input
+                  id="wizard-event-city"
                   className="input-field"
                   placeholder="e.g., Mumbai, Srinagar"
                   value={form.city}
                   onChange={(e) => setForm(f => ({ ...f, city: e.target.value }))}
+                  required
                 />
               </div>
             </div>
@@ -161,30 +188,37 @@ export default function EventWizard({ isOpen, onClose, onGenerate, isLoading, lo
             {/* Guest Count + Budget + Currency */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px', gap: 12, marginBottom: 16 }}>
               <div>
-                <label className="label">
-                  <Users size={11} style={{ display: 'inline', verticalAlign: 'middle' }} /> Guest Count (PAX)
+                <label htmlFor="wizard-guest-count" className="label">
+                  <Users size={11} aria-hidden="true" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} />
+                  Guest Count (PAX)
                 </label>
                 <input
+                  id="wizard-guest-count"
                   type="number"
+                  min={1}
                   className="input-field font-mono"
                   value={form.guestCount}
                   onChange={(e) => setForm(f => ({ ...f, guestCount: parseInt(e.target.value) || 0 }))}
                 />
               </div>
               <div>
-                <label className="label">
-                  <Wallet size={11} style={{ display: 'inline', verticalAlign: 'middle' }} /> Total Budget
+                <label htmlFor="wizard-total-budget" className="label">
+                  <Wallet size={11} aria-hidden="true" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} />
+                  Total Budget
                 </label>
                 <input
+                  id="wizard-total-budget"
                   type="number"
+                  min={1000}
                   className="input-field font-mono"
                   value={form.totalBudget}
                   onChange={(e) => setForm(f => ({ ...f, totalBudget: parseInt(e.target.value) || 0 }))}
                 />
               </div>
               <div>
-                <label className="label">Currency</label>
+                <label htmlFor="wizard-currency-select" className="label">Currency</label>
                 <select
+                  id="wizard-currency-select"
                   className="input-field"
                   value={form.currency}
                   onChange={(e) => setForm(f => ({ ...f, currency: e.target.value }))}
@@ -197,10 +231,12 @@ export default function EventWizard({ isOpen, onClose, onGenerate, isLoading, lo
 
             {/* Event Date */}
             <div style={{ marginBottom: 16 }}>
-              <label className="label">
-                <Calendar size={11} style={{ display: 'inline', verticalAlign: 'middle' }} /> Event Date
+              <label htmlFor="wizard-event-date" className="label">
+                <Calendar size={11} aria-hidden="true" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} />
+                Event Date
               </label>
               <input
+                id="wizard-event-date"
                 type="date"
                 className="input-field"
                 value={form.eventDate}
@@ -210,13 +246,21 @@ export default function EventWizard({ isOpen, onClose, onGenerate, isLoading, lo
 
             {/* Vibe Tags */}
             <div style={{ marginBottom: 16 }}>
-              <label className="label">
-                <Tag size={11} style={{ display: 'inline', verticalAlign: 'middle' }} /> Vibe / Theme Tags
+              <label id="vibe-tags-label" className="label">
+                <Tag size={11} aria-hidden="true" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} />
+                Vibe / Theme Tags
               </label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              <div
+                role="group"
+                aria-labelledby="vibe-tags-label"
+                style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}
+              >
                 {VIBE_PRESETS[form.eventType].map((tag) => (
                   <button
                     key={tag}
+                    type="button"
+                    aria-pressed={form.vibeTags.includes(tag)}
+                    aria-label={`Toggle vibe tag: ${tag}`}
                     onClick={() => toggleVibe(tag)}
                     style={{
                       padding: '6px 12px',
@@ -238,10 +282,12 @@ export default function EventWizard({ isOpen, onClose, onGenerate, isLoading, lo
 
             {/* Dietary Notes */}
             <div style={{ marginBottom: 24 }}>
-              <label className="label">
-                <UtensilsCrossed size={11} style={{ display: 'inline', verticalAlign: 'middle' }} /> Dietary / Cultural Notes
+              <label htmlFor="wizard-dietary-notes" className="label">
+                <UtensilsCrossed size={11} aria-hidden="true" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} />
+                Dietary / Cultural Notes
               </label>
               <input
+                id="wizard-dietary-notes"
                 className="input-field"
                 placeholder="e.g., Pure veg, Halal, Jain, Gluten-free"
                 value={form.dietaryNotes}
@@ -251,16 +297,17 @@ export default function EventWizard({ isOpen, onClose, onGenerate, isLoading, lo
 
             {/* Submit */}
             <button
+              type="submit"
               className="btn-primary"
-              onClick={handleSubmit}
               disabled={!form.title || !form.city}
+              aria-label="Architect Event Blueprint with Groq LPU"
               style={{ width: '100%', justifyContent: 'center', padding: '14px 24px', fontSize: 15 }}
             >
-              <Sparkles size={18} />
+              <Sparkles size={18} aria-hidden="true" />
               Architect Event Blueprint ⚡
-              <ChevronRight size={16} />
+              <ChevronRight size={16} aria-hidden="true" />
             </button>
-          </>
+          </form>
         )}
       </div>
     </div>

@@ -92,16 +92,19 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }} role="region" aria-label="Personalized Ideas & Vibe Lab">
       {/* ─── Top Metrics Bar ────────────────────────────────────────────── */}
-      <div
+      <section
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
           gap: 16,
         }}
+        aria-label="Creative Concepts Overview"
       >
         <div
+          tabIndex={0}
+          aria-label={`Creative Concepts: ${ideas.length} Custom Ideas`}
           style={{
             background: 'var(--surface)',
             border: '1px solid var(--hairline)',
@@ -114,7 +117,7 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
             <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Creative Concepts
             </span>
-            <Sparkles size={16} style={{ color: 'var(--gold)' }} />
+            <Sparkles size={16} aria-hidden="true" style={{ color: 'var(--gold)' }} />
           </div>
           <div style={{ fontSize: '1.6rem', fontWeight: 700, fontFamily: 'var(--mono-font)', color: 'var(--text-primary)' }}>
             {ideas.length} Custom Ideas
@@ -125,6 +128,8 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
         </div>
 
         <div
+          tabIndex={0}
+          aria-label={`Shortlisted: ${shortlistedIdeas.length} Active in Plan, valued at ${sym}${formatNumber(shortlistedTotalCost)}`}
           style={{
             background: 'var(--surface)',
             border: '1px solid var(--hairline)',
@@ -137,7 +142,7 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
             <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Shortlisted for Event
             </span>
-            <BookmarkCheck size={16} style={{ color: 'var(--emerald)' }} />
+            <BookmarkCheck size={16} aria-hidden="true" style={{ color: 'var(--emerald)' }} />
           </div>
           <div style={{ fontSize: '1.6rem', fontWeight: 700, fontFamily: 'var(--mono-font)', color: 'var(--emerald)' }}>
             {shortlistedIdeas.length} Active in Plan
@@ -148,6 +153,8 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
         </div>
 
         <div
+          tabIndex={0}
+          aria-label="Average Impact Rating: 9.3 out of 10"
           style={{
             background: 'var(--surface)',
             border: '1px solid var(--hairline)',
@@ -160,7 +167,7 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
             <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Average Impact Rating
             </span>
-            <TrendingUp size={16} style={{ color: 'var(--sky)' }} />
+            <TrendingUp size={16} aria-hidden="true" style={{ color: 'var(--sky)' }} />
           </div>
           <div style={{ fontSize: '1.6rem', fontWeight: 700, fontFamily: 'var(--mono-font)', color: 'var(--sky)' }}>
             9.3 / 10
@@ -171,6 +178,8 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
         </div>
 
         <div
+          tabIndex={0}
+          aria-label="Execution Precision: 100% SOPs"
           style={{
             background: 'var(--surface)',
             border: '1px solid var(--hairline)',
@@ -183,7 +192,7 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
             <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Execution Precision
             </span>
-            <ListOrdered size={16} style={{ color: 'var(--violet)' }} />
+            <ListOrdered size={16} aria-hidden="true" style={{ color: 'var(--violet)' }} />
           </div>
           <div style={{ fontSize: '1.6rem', fontWeight: 700, fontFamily: 'var(--mono-font)', color: 'var(--text-primary)' }}>
             100% SOPs
@@ -192,7 +201,7 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
             Step-by-step blueprints provided
           </div>
         </div>
-      </div>
+      </section>
 
       {/* ─── Category Filter & Custom Creation Bar ──────────────────────── */}
       <div
@@ -207,12 +216,15 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
           border: '1px solid var(--hairline)',
           borderRadius: 'var(--radius-md)',
         }}
+        className="no-print"
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }} role="group" aria-label="Creative Categories Filter">
           <span style={{ fontSize: '0.82rem', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Filter size={14} /> Category:
+            <Filter size={14} aria-hidden="true" /> Category:
           </span>
           <button
+            aria-pressed={categoryFilter === 'all'}
+            aria-label={`All categories (${ideas.length} ideas)`}
             onClick={() => setCategoryFilter('all')}
             style={{
               padding: '5px 12px',
@@ -230,6 +242,8 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
           {categories.map(cat => (
             <button
               key={cat}
+              aria-pressed={categoryFilter === cat}
+              aria-label={`Filter by ${cat}`}
               onClick={() => setCategoryFilter(cat)}
               style={{
                 padding: '5px 12px',
@@ -249,6 +263,9 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
 
         <button
           onClick={() => setShowAddModal(true)}
+          aria-label="Add custom creative activation"
+          aria-haspopup="dialog"
+          aria-expanded={showAddModal}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -263,7 +280,7 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
             cursor: 'pointer',
           }}
         >
-          <Plus size={14} /> Add Custom Idea
+          <Plus size={14} aria-hidden="true" /> Add Custom Idea
         </button>
       </div>
 
@@ -274,6 +291,8 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
           gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
           gap: 20,
         }}
+        role="list"
+        aria-label="Personalized Creative Ideas"
       >
         {filteredIdeas.map(idea => {
           const isShortlisted = !!idea.shortlisted;
@@ -281,8 +300,9 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
           const steps = parseBlueprintSteps(idea.executionBlueprint);
 
           return (
-            <div
+            <article
               key={idea.id}
+              role="listitem"
               style={{
                 background: 'var(--surface)',
                 border: isShortlisted ? '1px solid var(--emerald)' : '1px solid var(--hairline)',
@@ -312,11 +332,12 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
                     color: 'var(--sky)',
                   }}
                 >
-                  <Tag size={12} /> {idea.category}
+                  <Tag size={12} aria-hidden="true" /> {idea.category}
                 </span>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span
+                    aria-label={`Impact score ${idea.impactScore}`}
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
@@ -330,7 +351,7 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
                       border: '1px solid rgba(245, 158, 11, 0.3)',
                     }}
                   >
-                    <Zap size={13} /> {idea.impactScore}
+                    <Zap size={13} aria-hidden="true" /> {idea.impactScore}
                   </span>
                 </div>
               </div>
@@ -380,10 +401,12 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
                       gap: 6,
                     }}
                   >
-                    <ListOrdered size={14} style={{ color: 'var(--gold)' }} /> Execution Blueprint
+                    <ListOrdered size={14} aria-hidden="true" style={{ color: 'var(--gold)' }} /> Execution Blueprint
                   </span>
                   <button
                     onClick={() => setExpandedBlueprintId(isBlueprintExpanded ? null : idea.id)}
+                    aria-expanded={isBlueprintExpanded}
+                    aria-label={`${isBlueprintExpanded ? 'Collapse' : 'Expand'} execution blueprint for ${idea.title}`}
                     style={{
                       background: 'transparent',
                       border: 'none',
@@ -397,9 +420,9 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
                   </button>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <ol style={{ display: 'flex', flexDirection: 'column', gap: 8, listStyle: 'none', padding: 0, margin: 0 }}>
                   {(isBlueprintExpanded ? steps : steps.slice(0, 2)).map((st, idx) => (
-                    <div
+                    <li
                       key={idx}
                       style={{
                         display: 'flex',
@@ -411,6 +434,7 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
                       }}
                     >
                       <span
+                        aria-hidden="true"
                         style={{
                           width: 18,
                           height: 18,
@@ -430,29 +454,37 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
                         {idx + 1}
                       </span>
                       <span>{st}</span>
-                    </div>
+                    </li>
                   ))}
-                  {!isBlueprintExpanded && steps.length > 2 && (
-                    <div
-                      onClick={() => setExpandedBlueprintId(idea.id)}
-                      style={{
-                        fontSize: '0.74rem',
-                        color: 'var(--text-tertiary)',
-                        cursor: 'pointer',
-                        paddingLeft: 26,
-                        fontStyle: 'italic',
-                      }}
-                    >
-                      + {steps.length - 2} more operational steps...
-                    </div>
-                  )}
-                </div>
+                </ol>
+                {!isBlueprintExpanded && steps.length > 2 && (
+                  <button
+                    onClick={() => setExpandedBlueprintId(idea.id)}
+                    aria-label={`Expand ${steps.length - 2} more operational steps for ${idea.title}`}
+                    style={{
+                      fontSize: '0.74rem',
+                      color: 'var(--text-tertiary)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      paddingLeft: 26,
+                      marginTop: 6,
+                      fontStyle: 'italic',
+                      textAlign: 'left',
+                      display: 'block',
+                    }}
+                  >
+                    + {steps.length - 2} more operational steps...
+                  </button>
+                )}
               </div>
 
               {/* Action: Shortlist into Event Plan */}
               <div style={{ marginTop: 'auto', paddingTop: 6 }}>
                 <button
                   onClick={() => toggleShortlist(idea.id)}
+                  aria-pressed={isShortlisted}
+                  aria-label={`${isShortlisted ? 'Remove' : 'Shortlist'} ${idea.title} in event plan`}
                   style={{
                     width: '100%',
                     display: 'flex',
@@ -472,16 +504,16 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
                 >
                   {isShortlisted ? (
                     <>
-                      <BookmarkCheck size={16} /> Shortlisted in Event Plan
+                      <BookmarkCheck size={16} aria-hidden="true" /> Shortlisted in Event Plan
                     </>
                   ) : (
                     <>
-                      <Bookmark size={16} /> Shortlist Idea into Event
+                      <Bookmark size={16} aria-hidden="true" /> Shortlist Idea into Event
                     </>
                   )}
                 </button>
               </div>
-            </div>
+            </article>
           );
         })}
       </div>
@@ -500,6 +532,9 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
             justifyContent: 'center',
             padding: 16,
           }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="custom-activation-title"
           onClick={() => setShowAddModal(false)}
         >
           <div
@@ -515,11 +550,12 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
             onClick={e => e.stopPropagation()}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              <h3 id="custom-activation-title" style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                 Add Custom Event Activation
               </h3>
               <button
                 onClick={() => setShowAddModal(false)}
+                aria-label="Close add custom activation modal"
                 style={{
                   background: 'transparent',
                   border: 'none',
@@ -527,16 +563,17 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
                   cursor: 'pointer',
                 }}
               >
-                <X size={18} />
+                <X size={18} aria-hidden="true" />
               </button>
             </div>
 
             <form onSubmit={handleAddIdea} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 6 }}>
+                <label htmlFor="custom-idea-title-input" style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 6 }}>
                   Activation Concept Title *
                 </label>
                 <input
+                  id="custom-idea-title-input"
                   type="text"
                   placeholder="e.g., Drone Light QR Code, Midnight Chai Bar"
                   value={newIdea.title}
@@ -557,10 +594,11 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 6 }}>
+                  <label htmlFor="custom-idea-category-select" style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 6 }}>
                     Category
                   </label>
                   <select
+                    id="custom-idea-category-select"
                     value={newIdea.category}
                     onChange={e => setNewIdea(i => ({ ...i, category: e.target.value }))}
                     style={{
@@ -583,10 +621,11 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 6 }}>
+                  <label htmlFor="custom-idea-cost-input" style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 6 }}>
                     Est. Cost ({currency})
                   </label>
                   <input
+                    id="custom-idea-cost-input"
                     type="number"
                     value={newIdea.estimatedCost}
                     onChange={e => setNewIdea(i => ({ ...i, estimatedCost: Number(e.target.value) }))}
@@ -605,10 +644,11 @@ export default function VibeLab({ ideas, currency, onUpdateIdeas, onShortlistToB
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 6 }}>
+                <label htmlFor="custom-idea-blueprint-textarea" style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 6 }}>
                   Step-by-Step Execution Blueprint
                 </label>
                 <textarea
+                  id="custom-idea-blueprint-textarea"
                   value={newIdea.executionBlueprint}
                   onChange={e => setNewIdea(i => ({ ...i, executionBlueprint: e.target.value }))}
                   rows={4}

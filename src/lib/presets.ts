@@ -1152,6 +1152,9 @@ export const PRESET_MAP: Record<string, EventBlueprint> = {
   community: COMMUNITY_PRESET,
 };
 
+export const DEMO_PRESETS = PRESET_MAP;
+
+
 export const PRESET_LABELS: { key: string; label: string; emoji: string }[] = [
   { key: 'wedding', label: 'Royal Kashmiri Wedding', emoji: '💒' },
   { key: 'birthday', label: 'Cyberpunk 21st Birthday', emoji: '🎮' },

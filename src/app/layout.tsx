@@ -23,6 +23,9 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <a href="#main-content" className="sr-only focus:not-sr-only">
+          Skip to main content
+        </a>
         {children}
       </body>
     </html>
