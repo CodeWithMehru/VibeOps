@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface ErrorProps {
   error: Error & { digest?: string };
@@ -10,37 +11,21 @@ interface ErrorProps {
 
 export default function ErrorBoundary({ error, reset }: ErrorProps) {
   useEffect(() => {
-    // Log error to console without breaking telemetry
-    console.error('[VibeOps Command Center Error Boundary]:', error);
+    // Log error to telemetry safely
+    logger.error('[VibeOps Command Center Error Boundary]:', error);
   }, [error]);
 
   return (
     <div
       role="alert"
       aria-live="assertive"
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'var(--carbon)',
-        color: 'var(--text-primary)',
-        padding: '24px',
-      }}
+      className="state-screen-wrapper"
     >
       <div
-        className="card"
+        className="card state-card"
         style={{
-          maxWidth: 520,
-          width: '100%',
-          padding: '36px',
-          textAlign: 'center',
           border: '1px solid var(--crisis-coral)',
           boxShadow: '0 0 30px rgba(244, 63, 94, 0.2)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 16,
         }}
       >
         <div
@@ -92,7 +77,7 @@ export default function ErrorBoundary({ error, reset }: ErrorProps) {
             <RefreshCw size={15} aria-hidden="true" /> Recover Session
           </button>
           <button
-            onClick={() => { window.location.href = '/'; }}
+            onClick={() => { window.location.reload(); }}
             className="btn-secondary"
             aria-label="Reload command center home"
             style={{ fontSize: '0.86rem', padding: '10px 20px' }}

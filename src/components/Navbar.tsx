@@ -299,6 +299,7 @@ export default function Navbar({
                 Groq API Key
               </label>
               <input
+                autoFocus
                 id="groq-api-key-input"
                 type="password"
                 className="input-field"

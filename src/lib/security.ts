@@ -25,7 +25,7 @@ const rateLimitStore = new Map<string, RateLimitRecord>();
 export function sanitizeInput(input: string, maxLength: number = 500): string {
   if (typeof input !== 'string') return '';
 
-  let sanitized = input
+  const sanitized = input
     // Truncate to safe length
     .slice(0, maxLength)
     // Strip HTML tags and script blocks

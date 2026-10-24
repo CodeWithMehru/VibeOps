@@ -1,6 +1,6 @@
 // ─── Groq AI API Route with Defense-in-Depth Security ──────────────────────────
 // Next.js App Router API handler for all AI operations.
-// Includes sliding-window rate limiting, input sanitization & prompt guard.
+// Includes sliding-window rate limiting, input sanitization, payload size guard & prompt guard.
 
 import { NextRequest, NextResponse } from 'next/server';
 import {
@@ -15,6 +15,8 @@ import {
   validateEventPayload,
 } from '@/lib/security';
 import { applyQuickCommandMutation } from '@/lib/domain-engine';
+import { logger } from '@/lib/logger';
+import { EVENT_BOUNDS, HTTP_STATUS, RATE_LIMIT_CONFIG } from '@/lib/constants';
 
 export const MUTATE_SYSTEM_PROMPT = `You are VibeOps, an elite autonomous event production architect.
 You receive an existing event blueprint JSON and a natural language operational command from the event planner.
@@ -26,12 +28,63 @@ Return a valid JSON object matching this schema:
   "appliedSummary": "string describing exactly what operational changes were made"
 }`;
 
+const CACHE_HEADERS = {
+  'Cache-Control': 'no-store, max-age=0, must-revalidate',
+  Pragma: 'no-cache',
+};
+
+/**
+ * Handle OPTIONS preflight requests securely.
+ */
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      Allow: 'POST, GET, OPTIONS',
+      ...CACHE_HEADERS,
+    },
+  });
+}
+
+/**
+ * Handle GET requests with operational health telemetry.
+ */
+export async function GET() {
+  return NextResponse.json(
+    {
+      status: 'operational',
+      engine: 'VibeOps Groq LPU Autonomous Architect',
+      timestamp: new Date().toISOString(),
+    },
+    {
+      status: HTTP_STATUS.OK,
+      headers: CACHE_HEADERS,
+    }
+  );
+}
+
 export async function POST(request: NextRequest) {
   try {
-    // 1. Sliding-Window Rate Limiting
+    // 1. Payload Size Guard (Reject > 256 KB)
+    const contentLength = request.headers.get('content-length');
+    if (contentLength && parseInt(contentLength, 10) > EVENT_BOUNDS.MAX_PAYLOAD_SIZE_BYTES) {
+      return NextResponse.json(
+        {
+          error: 'PAYLOAD_TOO_LARGE',
+          message: `Request payload exceeds maximum allowed size of ${EVENT_BOUNDS.MAX_PAYLOAD_SIZE_BYTES / 1024} KB.`,
+        },
+        { status: HTTP_STATUS.PAYLOAD_TOO_LARGE, headers: CACHE_HEADERS }
+      );
+    }
+
+    // 2. Sliding-Window Rate Limiting
     const forwardedFor = request.headers.get('x-forwarded-for');
     const clientIp = forwardedFor ? forwardedFor.split(',')[0].trim() : 'local-client';
-    const rateCheck = checkRateLimit(clientIp, 45, 60000);
+    const rateCheck = checkRateLimit(
+      clientIp,
+      RATE_LIMIT_CONFIG.DEFAULT_MAX_REQUESTS,
+      RATE_LIMIT_CONFIG.WINDOW_MS
+    );
 
     if (!rateCheck.allowed) {
       return NextResponse.json(
@@ -39,19 +92,40 @@ export async function POST(request: NextRequest) {
           error: 'RATE_LIMIT_EXCEEDED',
           message: 'Too many requests received in a short window. Please wait a moment before sending additional commands.',
         },
-        { status: 429 }
+        { status: HTTP_STATUS.TOO_MANY_REQUESTS, headers: CACHE_HEADERS }
       );
     }
 
-    const body = await request.json();
+    // 3. Raw Body Length Verification
+    const rawBody = await request.text();
+    if (rawBody.length > EVENT_BOUNDS.MAX_PAYLOAD_SIZE_BYTES) {
+      return NextResponse.json(
+        {
+          error: 'PAYLOAD_TOO_LARGE',
+          message: `Request payload exceeds maximum allowed size of ${EVENT_BOUNDS.MAX_PAYLOAD_SIZE_BYTES / 1024} KB.`,
+        },
+        { status: HTTP_STATUS.PAYLOAD_TOO_LARGE, headers: CACHE_HEADERS }
+      );
+    }
+
+    let body;
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json(
+        { error: 'INVALID_JSON', message: 'Malformed JSON payload.' },
+        { status: HTTP_STATUS.BAD_REQUEST, headers: CACHE_HEADERS }
+      );
+    }
+
     const { action, payload, clientApiKey } = body;
 
-    // 2. Event Payload Bounds Validation
+    // 4. Event Payload Bounds Validation
     const validation = validateEventPayload(payload);
     if (!validation.valid) {
       return NextResponse.json(
         { error: 'INVALID_PAYLOAD', message: validation.error },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST, headers: CACHE_HEADERS }
       );
     }
 
@@ -61,16 +135,19 @@ export async function POST(request: NextRequest) {
       // If no key is provided, handle mutate_blueprint gracefully with deterministic local engine
       if (action === 'mutate_blueprint' && payload?.blueprint) {
         const localResult = applyQuickCommandMutation(payload.blueprint, payload.command || '');
-        return NextResponse.json({
-          data: localResult,
-          modelUsed: 'Deterministic Local Engine (Offline Mode)',
-          latencyMs: 12,
-        });
+        return NextResponse.json(
+          {
+            data: localResult,
+            modelUsed: 'Deterministic Local Engine (Offline Mode)',
+            latencyMs: 12,
+          },
+          { headers: CACHE_HEADERS }
+        );
       }
 
       return NextResponse.json(
         { error: 'NO_API_KEY', message: 'No Groq API key configured. Please add your key in Settings or set GROQ_API_KEY in .env.local.' },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST, headers: CACHE_HEADERS }
       );
     }
 
@@ -156,36 +233,42 @@ Modify the blueprint according to this directive and output the updated blueprin
       default:
         return NextResponse.json(
           { error: 'INVALID_ACTION', message: `Unknown action: ${action}` },
-          { status: 400 }
+          { status: HTTP_STATUS.BAD_REQUEST, headers: CACHE_HEADERS }
         );
     }
 
     try {
       const result = await callGroqStructuredJSON(systemPrompt, userPrompt, apiKey);
 
-      return NextResponse.json({
-        data: result.data,
-        modelUsed: result.modelUsed,
-        latencyMs: result.latencyMs,
-      });
+      return NextResponse.json(
+        {
+          data: result.data,
+          modelUsed: result.modelUsed,
+          latencyMs: result.latencyMs,
+        },
+        { headers: CACHE_HEADERS }
+      );
     } catch (groqErr) {
       // Graceful fallback for mutate_blueprint on rate limit or network error
       if (action === 'mutate_blueprint' && payload?.blueprint) {
         const localResult = applyQuickCommandMutation(payload.blueprint, payload.command || '');
-        return NextResponse.json({
-          data: localResult,
-          modelUsed: 'llama-3.3-70b-versatile (Fallback to Local Optimizer)',
-          latencyMs: 38,
-        });
+        return NextResponse.json(
+          {
+            data: localResult,
+            modelUsed: 'llama-3.3-70b-versatile (Fallback to Local Optimizer)',
+            latencyMs: 38,
+          },
+          { headers: CACHE_HEADERS }
+        );
       }
       throw groqErr;
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[AI Route Error]', message);
+    logger.error('[AI Route Error]', message);
     return NextResponse.json(
       { error: 'AI_ERROR', message: 'Unable to process AI operation. Please check your network and API credentials.' },
-      { status: 500 }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR, headers: CACHE_HEADERS }
     );
   }
 }

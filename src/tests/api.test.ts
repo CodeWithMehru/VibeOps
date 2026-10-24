@@ -38,7 +38,7 @@ describe('Groq AI API & LPU Waterfall Fallback', () => {
       expect(result.data).toEqual(mockSuccessData);
       expect(globalThis.fetch).toHaveBeenCalledTimes(1);
 
-      const calledBody = JSON.parse((globalThis.fetch as any).mock.calls[0][1].body);
+      const calledBody = JSON.parse(vi.mocked(globalThis.fetch).mock.calls[0][1]?.body as string);
       expect(calledBody.model).toBe('llama-3.3-70b-versatile');
     });
 
@@ -79,11 +79,11 @@ describe('Groq AI API & LPU Waterfall Fallback', () => {
       expect(globalThis.fetch).toHaveBeenCalledTimes(2);
 
       // Verify first attempt used 70b
-      const firstCallBody = JSON.parse((globalThis.fetch as any).mock.calls[0][1].body);
+      const firstCallBody = JSON.parse(vi.mocked(globalThis.fetch).mock.calls[0][1]?.body as string);
       expect(firstCallBody.model).toBe('llama-3.3-70b-versatile');
 
       // Verify fallback attempt used 8b
-      const secondCallBody = JSON.parse((globalThis.fetch as any).mock.calls[1][1].body);
+      const secondCallBody = JSON.parse(vi.mocked(globalThis.fetch).mock.calls[1][1]?.body as string);
       expect(secondCallBody.model).toBe('llama-3.1-8b-instant');
     });
 

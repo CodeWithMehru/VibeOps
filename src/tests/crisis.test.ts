@@ -4,7 +4,6 @@ import {
   calculateBudgetDeltaReallocation,
   generateFallbackCrisisResponse,
 } from '@/lib/crisis-utils';
-import { CrisisSeverity } from '@/lib/types';
 
 describe('Crisis War-Room & Chaos Simulation Logic', () => {
   const totalBudget = 2500000;

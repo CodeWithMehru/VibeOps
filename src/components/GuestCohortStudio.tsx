@@ -6,7 +6,6 @@ import {
   UtensilsCrossed,
   Crown,
   HeartHandshake,
-  ShieldAlert,
   Copy,
   Check,
   Share2,
@@ -79,9 +78,12 @@ export default function GuestCohortStudio({ eventSummary }: GuestCohortStudioPro
       </div>
 
       {/* Cohort & Dietary Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+      <div className="cohort-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
         {/* Card 1: Attendance Tiers */}
-        <div
+        <article
+          role="region"
+          aria-label={`Attendance Tiers: ${cohorts.vipCount} VIP or Family members, ${cohorts.coreCount} Core Guests, ${cohorts.bufferCount} Buffer or Walk-ins`}
+          className="cohort-card"
           style={{
             background: 'var(--surface-elevated)',
             border: '1px solid var(--hairline)',
@@ -91,8 +93,6 @@ export default function GuestCohortStudio({ eventSummary }: GuestCohortStudioPro
             flexDirection: 'column',
             gap: 12,
           }}
-          tabIndex={0}
-          aria-label={`Attendance Tiers: ${cohorts.vipCount} VIP or Family members, ${cohorts.coreCount} Core Guests, ${cohorts.bufferCount} Buffer or Walk-ins`}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-secondary)' }}>
@@ -126,10 +126,13 @@ export default function GuestCohortStudio({ eventSummary }: GuestCohortStudioPro
               <span className="font-mono" style={{ fontWeight: 700, color: 'var(--emerald)' }}>{cohorts.bufferCount} PAX</span>
             </div>
           </div>
-        </div>
+        </article>
 
         {/* Card 2: Dietary Distribution */}
-        <div
+        <article
+          role="region"
+          aria-label={`Dietary Distribution: ${cohorts.dietaryStandardVeg} Vegetarian or Standard plates, ${cohorts.dietaryNonVegOrSpecial} Non-Vegetarian or Regional plates, ${cohorts.dietaryKidsOrAllergySafe} Kids or Allergy-Safe plates`}
+          className="cohort-card"
           style={{
             background: 'var(--surface-elevated)',
             border: '1px solid var(--hairline)',
@@ -139,8 +142,6 @@ export default function GuestCohortStudio({ eventSummary }: GuestCohortStudioPro
             flexDirection: 'column',
             gap: 12,
           }}
-          tabIndex={0}
-          aria-label={`Dietary Distribution: ${cohorts.dietaryStandardVeg} Vegetarian or Standard plates, ${cohorts.dietaryNonVegOrSpecial} Non-Vegetarian or Regional plates, ${cohorts.dietaryKidsOrAllergySafe} Kids or Allergy-Safe plates`}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-secondary)' }}>
@@ -174,11 +175,12 @@ export default function GuestCohortStudio({ eventSummary }: GuestCohortStudioPro
               <span className="font-mono" style={{ fontWeight: 700 }}>{cohorts.dietaryKidsOrAllergySafe} plates</span>
             </div>
           </div>
-        </div>
+        </article>
       </div>
 
       {/* Smart Invite & RSVP Broadcast Generator */}
       <div
+        className="invite-box"
         style={{
           background: 'var(--surface-elevated)',
           border: '1px solid var(--hairline-strong)',

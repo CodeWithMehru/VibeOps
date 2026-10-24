@@ -8,15 +8,9 @@ export default function Loading() {
       aria-live="polite"
       aria-busy="true"
       aria-label="Loading VibeOps Command Center"
+      className="state-screen-wrapper"
       style={{
-        minHeight: '100vh',
-        background: 'var(--carbon)',
-        color: 'var(--text-primary)',
-        display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
         gap: 20,
       }}
     >

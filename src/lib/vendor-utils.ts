@@ -1,4 +1,4 @@
-import { VendorItem, VendorStatus } from './types';
+import { VendorItem } from './types';
 
 export interface VendorFinancials {
   totalEstimated: number;

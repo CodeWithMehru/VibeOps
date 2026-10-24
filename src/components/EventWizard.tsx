@@ -177,6 +177,7 @@ export default function EventWizard({ isOpen, onClose, onGenerate, isLoading, lo
                     Event Title <span aria-hidden="true" style={{ color: 'var(--crisis-coral)' }}>*</span>
                   </label>
                   <input
+                    autoFocus
                     id="wizard-event-title"
                     className="input-field"
                     placeholder="e.g., Royal Heritage Reception"

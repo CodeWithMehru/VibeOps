@@ -7,27 +7,12 @@ export default function NotFound() {
     <div
       role="region"
       aria-label="404 Page Not Found"
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'var(--carbon)',
-        color: 'var(--text-primary)',
-        padding: '24px',
-      }}
+      className="state-screen-wrapper"
     >
       <div
-        className="card"
+        className="card state-card"
         style={{
           maxWidth: 480,
-          width: '100%',
-          padding: '36px',
-          textAlign: 'center',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 16,
         }}
       >
         <div
